@@ -6,7 +6,8 @@ const axios     = require('axios');
 class ValidationToken {
 
     constructor(token, iss) { 
-        console.log("INGRESANDO AL CONSTRUCTOR DE LA CLASE VALIDATION TOKEN");
+        console.log("ENTERING TO THE TOKEN VALIDATION CONSTRUCTOR CLASS");
+
         this.token  =   token;
         this.iss    =   iss;
     }
@@ -17,8 +18,8 @@ class ValidationToken {
      * - Validar en el caso de que el token no petenece al User Pool correspondiente.
      * - El jwt es de tipo Access Token
     */
-    async validateToken() {
-
+   async validateToken() {
+    new Promise (async (resolve, reject) => {
         const token     = this.token;
         const iss       = this.iss;
         const decodeJwt = jwt.decode(token, {complete: true});
@@ -26,8 +27,7 @@ class ValidationToken {
         if(!decodeJwt) {
             console.log(`Error en decode al validar el token`);
             console.log(token);
-            throw "El JWT No es válido";
-            return;
+            reject('El JWT No es válido');
         } else {
             console.log(`El Token es válido`);
             console.log(decodeJwt);
@@ -36,16 +36,14 @@ class ValidationToken {
         // En caso de que no sea un token del User Pool.
         if (decodeJwt.payload.iss != iss) {
             console.log(`Error al comparar el User Pool el payload ${decodeJwt.payload.iss} con el definido en la app${iss}`);
-            throw "Usuario NO Autorizado";
-            return;
+            reject('Usuario NO Autorizado');
         } else {
             console.log(`El Token corresponde al del user pool ${iss}`);
         }
 
         if(decodeJwt.payload.token_use != 'access'){
             console.log(`Error, el token no es de tipo Access.`);
-            throw "Usuario NO Autorizado";
-            return;
+            reject("Usuario NO Autorizado");
         } else {
             console.log("El Token es de tipo Access Token");
         }
@@ -58,31 +56,35 @@ class ValidationToken {
         }catch(err) {
             console.log(`Error al obtener el JWK`)
             console.log(err);
-            throw "Problemas en el servidor";
-            return;
+            reject("Problemas en el servidor");
         }
 
         const kid   = decodeJwt.header.kid;
         const pem   = pems[kid];
         if(!pem) {
             console.log(`Error con El Access Token al obtener el pem con el kid`);
-            throw "Usuario No Autorizado";
+            reject("Usuario No Autorizado");
         }
 
         jwt.verify(token, pem, { algorithms: ['RS256'] }, function(err, decodedToken) {
             if(!err){
-                console.log(`El usuario es correcto`);
-                return;
-           }else{
+                console.log(`El usuario es correcto ${decodedToken}:`);
+                const response  =   {
+                    flag: "OK",
+                    message: `Usuario completamete validado`
+                };
+                resolve(response);           
+            }else{
                console.log(`Error al verificar el token: ${decodedToken}`);
                console.log(err);
-               throw "Usuario No Autorizado";
-               return;
+               reject("Usuario No Autorizado");
            }
            
    
        });
-        
+
+    });
+    
     }
 
     /**

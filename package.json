@@ -1,6 +1,6 @@
 {
     "name": "cognito-validation-token",
-    "version": "0.0.2",
+    "version": "0.0.4",
     "description": "With this pakage you can validate the cognito token with the validation process",
     "main": "ValidationToken.js",
     "scripts": {
